@@ -1,0 +1,8 @@
+feedparser
+pydantic
+python-dotenv
+google-genai
+pydub
+edge-tts
+requests
+audioop-lts; python_version >= "3.13"

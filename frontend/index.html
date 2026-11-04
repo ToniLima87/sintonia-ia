@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="dark">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SINTONIA IA | Podcast Diário & Agente Autônomo</title>
+    <meta name="description" content="Podcast diário sobre Inteligência Artificial em português, produzido por um agente autônomo: coleta notícias, escreve o roteiro com Gemini e gera o áudio com vozes neurais.">
+    <meta name="theme-color" content="#030712">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Sintonia IA | Podcast diário de Inteligência Artificial">
+    <meta property="og:description" content="As principais notícias de IA do dia, em um bate-papo em pt-BR entre Lucas e Beatriz, gerado de forma 100% autônoma.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎙️</text></svg>">
+    <!--Tailwind CSS-->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!--FontAwesome Icons-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!--Google Fonts-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+
+    <script>
+      tailwind.config = {
+          darkMode: 'class',
+          theme: {
+              extend: {
+                  colors: {
+                      brand: {
+                          cyan: '#00f2ff',
+                          cyanDark: '#00a8b3',
+                          emerald: '#00ff9d',
+                          navyDark: '#030712',
+                          cardBg: 'rgba(10, 18, 38, 0.75)',
+                          borderGlow: 'rgba(0, 242, 255, 0.3)'
+                      }
+                  },
+                  fontFamily: {
+                      orbitron: ['Orbitron', 'sans-serif'],
+                      sans: ['Inter', 'sans-serif']
+                  }
+              }
+          }
+      }
+  </script>
+
+  <style>
+      /* Custom Glowing & Particle Styling */
+      body {
+          background-color: #030712;
+          color: #f3f4f6;
+          font-family: 'Inter', sans-serif;
+          overflow-x: hidden;
+      }
+
+      /* Canvas background overlay */
+      #constellation-canvas {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          pointer-events: none;
+          z-index: 0;
+      }
+
+      /* Glassmorphism Cards */
+      .glass-card {
+          background: rgba(8, 16, 36, 0.75);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(0, 242, 255, 0.25);
+          box-shadow: 0 8px 32px 0 rgba(0, 242, 255, 0.1);
+          transition: all 0.3s ease;
+      }
+
+      .glass-card:hover {
+          border-color: rgba(0, 242, 255, 0.6);
+          box-shadow: 0 8px 32px 0 rgba(0, 242, 255, 0.25);
+      }
+
+      /* Glowing Text Effects */
+      .text-glow-cyan {
+          text-shadow: 0 0 15px rgba(0, 242, 255, 0.8), 0 0 30px rgba(0, 242, 255, 0.4);
+      }
+
+      .text-glow-emerald {
+          text-shadow: 0 0 15px rgba(0, 255, 157, 0.8), 0 0 30px rgba(0, 255, 157, 0.4);
+      }
+
+      /* Futuristic Title Typography matching NAIA image style */
+      .brand-logo-text {
+          font-family: 'Orbitron', sans-serif;
+          letter-spacing: 0.25em;
+          background: linear-gradient(180deg, #ffffff 20%, #00f2ff 100%);
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0 0 12px rgba(0, 242, 255, 0.6));
+      }
+
+      /* Connector Node SVG lines animation */
+      .pulse-line {
+          stroke-dasharray: 8;
+          animation: dash 12s linear infinite;
+      }
+
+      @keyframes dash {
+          to {
+              stroke-dashoffset: -100;
+          }
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+          background: #030712;
+      }
+      ::-webkit-scrollbar-thumb {
+          background: #00a8b3;
+          border-radius: 3px;
+      }
+
+      /* Audio Wave Equalizer Bar Animations */
+      .wave-bar {
+          width: 3px;
+          height: 100%;
+          background: #00f2ff;
+          border-radius: 3px;
+          animation: bounce 1.2s ease-in-out infinite alternate;
+      }
+
+      .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+      .wave-bar:nth-child(3) { animation-delay: 0.4s; background: #00ff9d; }
+      .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+      .wave-bar:nth-child(5) { animation-delay: 0.5s; background: #00ff9d; }
+      .wave-bar:nth-child(6) { animation-delay: 0.3s; }
+
+      @keyframes bounce {
+          0% { height: 15%; }
+          100% { height: 100%; }
+      }
+
+      .paused .wave-bar {
+          animation-play-state: paused;
+          height: 20% !important;
+      }
+
+      /* Toast notifications */
+      #toast {
+          transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      #toast.toast-hidden {
+          opacity: 0;
+          transform: translate(-50%, 1rem);
+          pointer-events: none;
+      }
+  </style>
+  
+  </head>
+  <body class="relative min-h-screen text-slate-100 selection:bg-cyan-500 selection:text-black">
+
+    <!-- Interactive Node Constellation Background -->
+    <canvas id="constellation-canvas"></canvas>
+
+    <div class="relative z-10 flex flex-col min-h-screen">
+
+        <!-- Navigation Bar -->
+        <header class="border-b border-cyan-500/20 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                    <div class="w-10 h-10 rounded-full border border-cyan-400/50 flex items-center justify-center bg-cyan-950/40 shadow-[0_0_15px_rgba(0,242,255,0.4)]">
+                        <i class="fa-solid fa-podcast text-cyan-400 text-lg"></i>
+                    </div>
+                    <div>
+                        <span class="brand-logo-text text-xl font-black block leading-none">SINTONIA IA</span>
+                        <span class="text-[9px] tracking-widest text-emerald-400 font-medium block mt-1 uppercase">Agente Autônomo & Podcast</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Nav -->
+                <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-300">
+                    <a href="#player" class="hover:text-cyan-400 transition-colors">Tocar Hoje</a>
+                    <a href="#arquivo" class="hover:text-cyan-400 transition-colors">Histórico</a>
+                    <a href="#modelo" class="hover:text-cyan-400 transition-colors">Arquitetura</a>
+                    <a href="#noticias" class="hover:text-cyan-400 transition-colors">Notícias</a>
+                </nav>
+
+                <!-- Actions / Controls -->
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button onclick="openModal('feeds-modal')" class="p-2.5 rounded-full border border-cyan-500/30 bg-slate-900 text-slate-300 hover:text-cyan-400 hover:border-cyan-400 transition-all text-xs" title="Gerenciar Feeds RSS">
+                        <i class="fa-solid fa-rss text-cyan-400"></i>
+                        <span class="hidden lg:inline ml-1.5 font-medium">Feeds</span>
+                    </button>
+
+                    <button onclick="openModal('prompt-modal')" class="p-2.5 rounded-full border border-emerald-500/30 bg-slate-900 text-slate-300 hover:text-emerald-400 hover:border-emerald-400 transition-all text-xs" title="Configurar Prompt & Vozes">
+                        <i class="fa-solid fa-sliders text-emerald-400"></i>
+                        <span class="hidden lg:inline ml-1.5 font-medium">Prompt</span>
+                    </button>
+
+                    <button id="btn-trigger-agent" onclick="openModal('agent-modal')" class="relative inline-flex items-center justify-center p-0.5 overflow-hidden text-xs font-semibold rounded-full group bg-gradient-to-br from-cyan-400 to-emerald-400 group-hover:from-cyan-400 group-hover:to-emerald-400 hover:text-black text-white focus:outline-none shadow-[0_0_20px_rgba(0,242,255,0.4)] transition-all">
+                        <span class="relative px-3.5 py-2 transition-all ease-in duration-75 bg-slate-950 rounded-full group-hover:bg-opacity-0 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-cyan-400 group-hover:text-black"></i>
+                            <span class="hidden sm:inline">Executar Agente</span>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <!-- HERO SECTION -->
+        <section class="py-10 md:py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full text-center relative">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/30 text-cyan-300 text-xs font-medium mb-6 shadow-[0_0_15px_rgba(0,242,255,0.2)]">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>NOVO EPISÓDIO TODOS OS DIAS • 100% AUTÔNOMO</span>
+      </div>
+
+      <!-- Main Headline matching image style -->
+      <h1 class="text-xs sm:text-sm font-semibold tracking-[0.3em] text-cyan-400 uppercase mb-3">
+          PROGRAMA DE NOTÍCIAS & PODCAST IA
+      </h1>
+      <h2 class="text-3xl sm:text-5xl md:text-6xl font-black font-orbitron tracking-tight mb-6 max-w-4xl mx-auto leading-tight">
+          UMA REDE QUE <span class="text-cyan-400 text-glow-cyan">CONECTA FATOS.</span><br>
+          UM PODCAST QUE <span class="text-emerald-400 text-glow-emerald">GERA VALOR.</span>
+      </h2>
+
+      <p class="max-w-2xl mx-auto text-slate-400 text-sm sm:text-base leading-relaxed mb-8">
+          Todos os dias nosso agente varre os principais portais globais de Inteligência Artificial, deduplica, sintetiza com o <strong class="modelo-gemini">Gemini</strong> e gera um debate explicativo em áudio entre <strong>Lucas (Analista)</strong> e <strong>Beatriz (Questionadora)</strong>.
+      </p>
+
+      <!-- AUDIO PLAYER WIDGET (Today's Episode) -->
+      <div id="player" class="max-w-3xl mx-auto glass-card rounded-2xl p-6 relative overflow-hidden border border-cyan-500/40 text-left">
+          <audio id="audio-player" preload="metadata"></audio>
+          <!-- Background ambient glow -->
+          <div class="absolute -right-20 -top-20 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-6">
+              <!-- Episode Cover / Avatar Duo -->
+              <div class="relative w-28 h-28 shrink-0 rounded-xl bg-slate-900 border border-cyan-500/30 flex items-center justify-center overflow-hidden group">
+                  <div class="absolute inset-0 bg-gradient-to-tr from-cyan-950 to-slate-900 opacity-90"></div>
+                  
+                  <!-- Host Avatars -->
+                  <div class="relative z-10 flex items-center -space-x-3">
+                      <div class="w-12 h-12 rounded-full border-2 border-cyan-400 bg-slate-800 flex items-center justify-center text-cyan-300 font-bold text-xs shadow-lg" title="Lucas (Analista)">
+                          <i class="fa-solid fa-user-gear text-base"></i>
+                      </div>
+                      <div class="w-12 h-12 rounded-full border-2 border-emerald-400 bg-slate-800 flex items-center justify-center text-emerald-300 font-bold text-xs shadow-lg" title="Beatriz (Questionadora)">
+                          <i class="fa-solid fa-user-astronaut text-base"></i>
+                      </div>
+                  </div>
+
+                  <!-- Equalizer Animation Overlay when playing -->
+                  <div id="wave-container" class="absolute bottom-2 left-0 right-0 h-4 flex items-end justify-center gap-1 z-20 paused">
+                      <div class="wave-bar"></div>
+                      <div class="wave-bar"></div>
+                      <div class="wave-bar"></div>
+                      <div class="wave-bar"></div>
+                      <div class="wave-bar"></div>
+                      <div class="wave-bar"></div>
+                  </div>
+              </div>
+
+              <!-- Info & Controls -->
+              <div class="flex-1 w-full">
+                  <div class="flex items-center justify-between gap-2 mb-1">
+                      <span id="player-ep-tag" class="text-[10px] font-bold tracking-wider text-emerald-400 uppercase bg-emerald-950/50 border border-emerald-500/30 px-2 py-0.5 rounded">EPISÓDIO</span>
+                      <span id="player-duration-tag" class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>--</span>
+                  </div>
+                  <h3 id="player-title" class="font-bold text-lg text-white mb-2 line-clamp-1">
+                      Carregando episódio...
+                  </h3>
+
+                  <!-- Progress Bar -->
+                  <div class="space-y-1 mb-4">
+                      <div class="w-full h-2 bg-slate-900 rounded-full cursor-pointer overflow-hidden border border-slate-800" id="progress-container" onclick="seekAudio(event)">
+                          <div id="progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 w-0 transition-all"></div>
+                      </div>
+                      <div class="flex justify-between text-[11px] text-slate-400 font-mono">
+                          <span id="time-current">00:00</span>
+                          <span id="time-total">00:00</span>
+                      </div>
+                  </div>
+
+                  <!-- Player Buttons -->
+                  <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-3">
+                          <button onclick="skipTime(-10)" class="text-slate-400 hover:text-cyan-400 text-sm transition-colors" title="Voltar 10s">
+                              <i class="fa-solid fa-rotate-left"></i> 10s
+                          </button>
+                          <button id="play-btn" onclick="togglePlay()" aria-label="Tocar ou pausar episódio" class="w-10 h-10 rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-bold flex items-center justify-center hover:scale-105 shadow-[0_0_15px_rgba(0,242,255,0.5)] transition-all">
+                              <i class="fa-solid fa-play text-sm ml-0.5" id="play-icon"></i>
+                          </button>
+                          <button onclick="skipTime(10)" class="text-slate-400 hover:text-cyan-400 text-sm transition-colors" title="Avançar 10s">
+                              10s <i class="fa-solid fa-rotate-right"></i>
+                          </button>
+                      </div>
+
+                      <div class="flex items-center gap-3">
+                          <button onclick="toggleSpeed()" id="speed-btn" class="text-xs font-mono font-semibold text-cyan-400 border border-cyan-500/30 px-2 py-1 rounded bg-cyan-950/30 hover:bg-cyan-900/40">
+                              1.0x
+                          </button>
+                          <a id="download-link" href="#" download aria-label="Baixar episódio em MP3" class="text-slate-400 hover:text-emerald-400 text-sm transition-colors" title="Baixar Áudio MP3">
+                              <i class="fa-solid fa-download"></i>
+                          </a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </section>
+
+
+  <!-- AUDIO EPISODE HISTORY & ARCHIVE SECTION -->
+  <section id="arquivo" class="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+              <span class="text-xs font-bold text-emerald-400 uppercase tracking-widest">HISTÓRICO DE EPISÓDIOS</span>
+              <h2 class="text-2xl font-bold font-orbitron mt-1">ACERVO DE PODCASTS GERADOS</h2>
+          </div>
+          <div class="flex items-center gap-2">
+              <input type="text" id="archive-search" onkeyup="filterArchive()" placeholder="Buscar episódios..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-400 w-48">
+          </div>
+      </div>
+
+      <div class="glass-card rounded-2xl border border-cyan-500/30 overflow-hidden">
+          <div class="divide-y divide-slate-800/80" id="archive-list">
+              <!-- Episode Items injected via JS -->
+          </div>
+      </div>
+  </section>
+
+
+  <!-- AGENT ARCHITECTURE SECTION -->
+  <section id="modelo" class="py-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative">
+      <div class="text-center mb-10">
+          <span class="text-xs font-bold text-cyan-400 uppercase tracking-widest">ARQUITETURA DO AGENTE</span>
+          <h2 class="text-2xl sm:text-4xl font-bold font-orbitron mt-2">COMO O AGENTE FUNCIONA</h2>
+          <p class="text-slate-400 text-sm max-w-xl mx-auto mt-2">Como os dados trafegam de fontes globais até a geração de voz sintética em Português.</p>
+      </div>
+
+      <div class="relative glass-card rounded-3xl p-6 sm:p-10 border border-cyan-500/30 overflow-hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+              
+              <!-- LEFT NODE: CENTRAL HUB (S) -->
+              <div class="lg:col-span-4 flex flex-col items-center justify-center text-center">
+                  <div class="relative mb-4">
+                      <div class="absolute -inset-4 rounded-full border border-cyan-400/30 animate-ping opacity-75"></div>
+                      <div class="absolute -inset-8 rounded-full border border-emerald-400/20"></div>
+                      
+                      <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-950 border-2 border-cyan-400 flex items-center justify-center shadow-[0_0_30px_rgba(0,242,255,0.6)]">
+                          <span class="brand-logo-text text-3xl font-black">S</span>
+                      </div>
+                  </div>
+
+                  <h3 class="font-orbitron font-bold text-lg text-white">ORQUESTRADOR</h3>
+                  <p class="text-xs text-slate-400 max-w-xs mt-1">Execução autônoma em lote diário sem necessidade de aprovação humana manual.</p>
+                  
+                  <div class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[11px] text-cyan-300 font-mono">
+                      <i class="fa-solid fa-microchip"></i> Python 3.13 • <span class="modelo-gemini">Gemini</span>
+                  </div>
+              </div>
+
+              <!-- CARDS MATCHING ARCHITECTURE -->
+              <div class="lg:col-span-8 space-y-4">
+                  <div class="glass-card rounded-2xl p-4 sm:p-5 border border-cyan-500/30 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-cyan-400 transition-all">
+                      <div class="w-10 h-10 rounded-full border border-cyan-400 bg-cyan-950/50 flex items-center justify-center text-cyan-400 shrink-0 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+                          <i class="fa-solid fa-rss text-sm"></i>
+                      </div>
+                      <div class="flex-1">
+                          <div class="flex items-center justify-between">
+                              <h4 class="font-bold text-cyan-300 font-orbitron text-xs sm:text-sm">1. COLETA, TRADUÇÃO & DEDUPLICAÇÃO</h4>
+                              <span class="text-[10px] bg-slate-900 text-slate-400 px-2 py-0.5 rounded border border-slate-700 font-mono">feedparser + sqlite</span>
+                          </div>
+                          <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                              Varre os feeds RSS configurados e compara links com o SQLite local para evitar reprocessamento.
+                          </p>
+                      </div>
+                  </div>
+
+                  <div class="glass-card rounded-2xl p-4 sm:p-5 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-emerald-400 transition-all">
+                      <div class="w-10 h-10 rounded-full border border-emerald-400 bg-emerald-950/50 flex items-center justify-center text-emerald-400 shrink-0 shadow-[0_0_15px_rgba(0,255,157,0.3)]">
+                          <i class="fa-solid fa-brain text-sm"></i>
+                      </div>
+                      <div class="flex-1">
+                          <div class="flex items-center justify-between">
+                              <h4 class="font-bold text-emerald-300 font-orbitron text-xs sm:text-sm">2. AGENTE ROTEIRISTA (<span class="modelo-gemini uppercase">GEMINI</span>)</h4>
+                              <span class="text-[10px] bg-slate-900 text-slate-400 px-2 py-0.5 rounded border border-slate-700 font-mono">pt-BR Prompt</span>
+                          </div>
+                          <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                              Converte notícias em inglês em um diálogo dinâmico em Português do Brasil entre <strong>Lucas (Analista)</strong> e <strong>Beatriz (Questionadora)</strong>.
+                          </p>
+                      </div>
+                  </div>
+
+                  <div class="glass-card rounded-2xl p-4 sm:p-5 border border-cyan-500/30 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-cyan-400 transition-all">
+                      <div class="w-10 h-10 rounded-full border border-cyan-400 bg-cyan-950/50 flex items-center justify-center text-cyan-400 shrink-0 shadow-[0_0_15px_rgba(0,242,255,0.3)]">
+                          <i class="fa-solid fa-wave-square text-sm"></i>
+                      </div>
+                      <div class="flex-1">
+                          <div class="flex items-center justify-between">
+                              <h4 class="font-bold text-cyan-300 font-orbitron text-xs sm:text-sm">3. SÍNTESE DE VOZ NEURAL (TTS)</h4>
+                              <span class="text-[10px] bg-slate-900 text-slate-400 px-2 py-0.5 rounded border border-slate-700 font-mono">edge-tts + pydub</span>
+                          </div>
+                          <p class="text-xs text-slate-300 mt-1 leading-relaxed">
+                              Atribui as vozes neurais <em>pt-BR-AntonioNeural</em> para Lucas e <em>pt-BR-FranciscaNeural</em> para Beatriz, concatenando o áudio final.
+                          </p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </section>
+
+
+  <!-- MAIN CONTENT TABS: NOTÍCIAS & ROTEIRO -->
+  <section id="noticias" class="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+          <div>
+              <h2 class="text-2xl font-bold font-orbitron text-white">CONTEÚDO DO EPISÓDIO</h2>
+              <p class="text-xs text-slate-400 mt-1" id="content-subtitle">Notícias selecionadas e roteiro escrito pelo agente</p>
+          </div>
+
+          <div class="flex bg-slate-900 p-1 rounded-xl border border-cyan-500/20">
+              <button id="tab-btn-news" onclick="switchTab('news')" class="px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-cyan-500 text-slate-950 shadow-[0_0_10px_rgba(0,242,255,0.4)]">
+                  <i class="fa-solid fa-newspaper mr-1.5"></i>Notícias Coletadas (<span id="news-count">0</span>)
+              </button>
+              <button id="tab-btn-script" onclick="switchTab('script')" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all">
+                  <i class="fa-solid fa-comments mr-1.5"></i>Roteiro do Debate (pt-BR)
+              </button>
+          </div>
+      </div>
+
+      <!-- TAB 1: NEWS FEED CONTENT -->
+      <div id="tab-content-news" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- News cards injected via JS (data/episodio.json) -->
+      </div>
+
+      <!-- TAB 2: GENERATED SCRIPT (DUO DEBATE IN PT-BR) -->
+      <div id="tab-content-script" class="hidden glass-card rounded-3xl p-6 sm:p-8 border border-cyan-500/30 max-w-4xl mx-auto space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div>
+                  <h3 class="font-bold font-orbitron text-cyan-300">ROTEIRO GERADO PELO <span class="modelo-gemini uppercase">GEMINI</span></h3>
+                  <p class="text-xs text-slate-400">Português do Brasil (pt-BR) • <span id="script-line-count">0</span> falas • Lucas e Beatriz</p>
+              </div>
+              <button onclick="copyScript()" class="text-xs text-slate-300 hover:text-cyan-400 bg-slate-900 px-3 py-1.5 rounded border border-slate-700 flex items-center gap-1.5">
+                  <i class="fa-regular fa-copy"></i> Copiar Texto
+              </button>
+          </div>
+
+          <div class="space-y-4 text-xs sm:text-sm leading-relaxed" id="script-container">
+              <!-- Script lines injected via JS (data/episodio.json) -->
+          </div>
+      </div>
+  </section>
+
+
+  <!-- MODAL 1: FEED MANAGER / SOURCES SETTINGS -->
+  <div id="feeds-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+      <div class="glass-card rounded-3xl border border-cyan-500/40 w-full max-w-2xl p-6 relative shadow-[0_0_50px_rgba(0,242,255,0.2)]">
+          <button aria-label="Fechar" onclick="closeModal('feeds-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+
+          <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 rounded-full bg-cyan-950 border border-cyan-400 flex items-center justify-center text-cyan-400">
+                  <i class="fa-solid fa-rss"></i>
+              </div>
+              <div>
+                  <h3 class="font-orbitron font-bold text-lg text-white">GERENCIADOR DE FEEDS RSS</h3>
+                  <p class="text-xs text-slate-400">Fontes que o agente monitora diariamente. Alterações nesta tela são demonstrativas.</p>
+              </div>
+          </div>
+
+          <!-- Add New Feed Input -->
+          <div class="bg-slate-900 p-3.5 rounded-xl border border-slate-800 mb-6 flex flex-col sm:flex-row gap-2">
+              <input type="text" id="new-feed-name" placeholder="Nome da Fonte (ex: MIT Tech Review)" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 sm:w-1/3">
+              <input type="url" id="new-feed-url" placeholder="https://exemplo.com/rss.xml" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 flex-1">
+              <button onclick="addCustomFeed()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition-all shrink-0">
+                  <i class="fa-solid fa-plus mr-1"></i>Adicionar
+              </button>
+          </div>
+
+          <!-- Feed List Table -->
+          <div class="max-h-64 overflow-y-auto space-y-2.5 pr-1" id="feed-list-container">
+              <!-- Dynamic Feed items -->
+          </div>
+
+          <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-800">
+              <span class="text-xs text-slate-400" id="feed-count-tag">5 Feeds Ativos</span>
+              <button onclick="testAllFeeds()" class="px-4 py-2 rounded-lg bg-slate-900 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-950 text-xs font-semibold transition-all">
+                  <i class="fa-solid fa-vial mr-1.5"></i>Testar Conexões
+              </button>
+          </div>
+      </div>
+  </div>
+
+
+  <!-- MODAL 2: PROMPT & PERSONA CUSTOMIZATION PANEL -->
+  <div id="prompt-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+      <div class="glass-card rounded-3xl border border-emerald-500/40 w-full max-w-2xl p-6 relative shadow-[0_0_50px_rgba(0,255,157,0.2)]">
+          <button aria-label="Fechar" onclick="closeModal('prompt-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+
+          <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 rounded-full bg-emerald-950 border border-emerald-400 flex items-center justify-center text-emerald-400">
+                  <i class="fa-solid fa-sliders"></i>
+              </div>
+              <div>
+                  <h3 class="font-orbitron font-bold text-lg text-white">PROMPT & PERSONAS DO GEMINI</h3>
+                  <p class="text-xs text-slate-400">Como o tom do debate e o perfil dos apresentadores são definidos (demonstração)</p>
+              </div>
+          </div>
+
+          <div class="space-y-4">
+              <!-- Tone & Duration selection -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Tom do Debate</label>
+                      <select id="prompt-tone" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400">
+                          <option value="equilibrado">Didático & Equilibrado (Padrão)</option>
+                          <option value="critico">Crítico & Provocador</option>
+                          <option value="descontraido">Descontraído & Entusiasmado</option>
+                          <option value="academico">Técnico & Acadêmico</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label class="block text-xs font-semibold text-slate-300 mb-1">Duração Alvo do Áudio</label>
+                      <select id="prompt-duration" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400">
+                          <option value="3min">Curto (~3 minutos)</option>
+                          <option value="5min" selected>Padrão (~5 minutos)</option>
+                          <option value="10min">Aprofundado (~10 minutos)</option>
+                      </select>
+                  </div>
+              </div>
+
+              <!-- Lucas Prompt Persona -->
+              <div>
+                  <label class="block text-xs font-semibold text-cyan-400 mb-1">Perfil Lucas (Analista Técnico)</label>
+                  <input type="text" id="persona-lucas" value="Especialista entusiasmado, focado em arquitetura de IA, números e aplicações práticas." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400">
+              </div>
+
+              <!-- Beatriz Prompt Persona -->
+              <div>
+                  <label class="block text-xs font-semibold text-emerald-400 mb-1">Perfil Beatriz (Questionadora)</label>
+                  <input type="text" id="persona-beatriz" value="Analista crítica, questiona custos, limitações éticas, riscos e impacto na vida real." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400">
+              </div>
+
+              <!-- System Instructions Template Preview -->
+              <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Instrução Adicional de Contexto (System Prompt)</label>
+                  <textarea id="prompt-system-text" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-xs font-mono text-slate-300 focus:outline-none focus:border-emerald-400 leading-relaxed">Sempre traduza termos técnicos complexos para explicações simples em Português do Brasil. Mantenha o formato estrito Lucas: [fala] e Beatriz: [fala].</textarea>
+              </div>
+          </div>
+
+          <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-800">
+              <button onclick="closeModal('prompt-modal')" class="px-4 py-2 rounded-lg bg-slate-900 text-slate-400 text-xs">Cancelar</button>
+              <button onclick="savePromptSettings()" class="px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all">
+                  <i class="fa-solid fa-floppy-disk mr-1.5"></i>Salvar Configurações
+              </button>
+          </div>
+      </div>
+  </div>
+
+
+  <!-- MODAL 3: AGENT RUNNER & LIVE LOG MONITOR -->
+  <div id="agent-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+      <div class="glass-card rounded-3xl border border-cyan-500/40 w-full max-w-2xl p-6 relative shadow-[0_0_50px_rgba(0,242,255,0.2)]">
+          <button aria-label="Fechar" onclick="closeModal('agent-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+
+          <div class="flex items-center gap-3 mb-6">
+              <div class="w-10 h-10 rounded-full bg-cyan-950 border border-cyan-400 flex items-center justify-center text-cyan-400">
+                  <i class="fa-solid fa-terminal"></i>
+              </div>
+              <div>
+                  <h3 class="font-orbitron font-bold text-lg text-white">EXECUÇÃO DO AGENTE</h3>
+                  <p class="text-xs text-slate-400">Demonstração visual das etapas que o agente executa todos os dias às 07:00</p>
+              </div>
+          </div>
+
+          <!-- Execution Steps Indicator -->
+          <div class="grid grid-cols-5 gap-1 text-[10px] text-center font-mono mb-4" id="step-indicators">
+              <div class="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-500" id="step-1">1. RSS Feeds</div>
+              <div class="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-500" id="step-2">2. Deduplica</div>
+              <div class="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-500" id="step-3">3. Gemini ptBR</div>
+              <div class="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-500" id="step-4">4. Edge-TTS</div>
+              <div class="p-1.5 rounded bg-slate-900 border border-slate-800 text-slate-500" id="step-5">5. Arquivo MP3</div>
+          </div>
+
+          <!-- Terminal Progress Box -->
+          <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-xs text-slate-300 h-60 overflow-y-auto space-y-2 mb-6" id="terminal-logs">
+              <p class="text-cyan-400">🚀 === AGENTE AUTÔNOMO SINTONIA IA PRONTO ===</p>
+              <p class="text-slate-500">Clique em 'Iniciar Pipeline' para rodar a rotina diária em lote.</p>
+          </div>
+
+          <!-- Status Progress bar -->
+          <div class="space-y-2">
+              <div class="flex justify-between text-xs">
+                  <span id="modal-status-text" class="text-cyan-400 font-semibold">Aguardando início...</span>
+                  <span id="modal-percent-text" class="font-mono text-slate-400">0%</span>
+              </div>
+              <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                  <div id="modal-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 w-0 transition-all duration-300"></div>
+              </div>
+          </div>
+
+          <div class="mt-6 flex justify-between items-center">
+              <button onclick="clearLogs()" class="text-xs text-slate-400 hover:text-slate-200">Limpar Console</button>
+              <button id="modal-start-btn" onclick="startAgentSimulation()" class="px-5 py-2.5 rounded-full bg-gradient-to-r from-cyan-400 to-emerald-400 text-slate-950 font-bold text-xs hover:scale-105 transition-all shadow-[0_0_15px_rgba(0,242,255,0.4)]">
+                  <i class="fa-solid fa-play mr-1.5"></i> Iniciar Pipeline
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950/80 py-8 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+              <span class="brand-logo-text font-bold text-sm">SINTONIA IA</span>
+              <span>© 2026 • Todos os direitos reservados.</span>
+          </div>
+          <div class="flex items-center gap-6 text-slate-400">
+              <a href="https://ai.google.dev/gemini-api" target="_blank" rel="noopener" class="hover:text-cyan-400">Gemini API</a>
+              <a href="https://github.com/rany2/edge-tts" target="_blank" rel="noopener" class="hover:text-cyan-400">edge-tts</a>
+              <a href="https://github.com" target="_blank" rel="noopener" class="hover:text-cyan-400" aria-label="Código no GitHub" title="Código no GitHub"><i class="fa-brands fa-github text-sm"></i></a>
+          </div>
+      </div>
+  </footer>
+
+</div>
+
+<!-- TOAST NOTIFICATION -->
+<div id="toast" role="status" aria-live="polite" class="toast-hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-xl bg-slate-900/95 border border-cyan-500/40 text-xs text-slate-100 shadow-[0_0_25px_rgba(0,242,255,0.25)] flex items-center gap-2">
+    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toast-text"></span>
+</div>
+
+<!-- JAVASCRIPT APP LOGIC -->
+<script>
+  // --- DATA STORES & STATE ---
+  // Preenchidos por carregarDadosDoProjeto() a partir de data/episodio.json e data/episodios.json
+  let activeFeeds = [];
+  let episodesArchive = [];
+  let currentEpisodeDate = null;
+
+  // --- 1. CONSTELLATION CANVAS BACKGROUND EFFECT ---
+  const canvas = document.getElementById('constellation-canvas');
+  const ctx = canvas.getContext('2d');
+  let width, height;
+  let particles = [];
+
+  function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+  }
+
+  class Particle {
+      constructor() {
+          this.x = Math.random() * width;
+          this.y = Math.random() * height;
+          this.vx = (Math.random() - 0.5) * 0.4;
+          this.vy = (Math.random() - 0.5) * 0.4;
+          this.radius = Math.random() * 1.5 + 1;
+      }
+
+      update() {
+          this.x += this.vx;
+          this.y += this.vy;
+
+          if (this.x < 0 || this.x > width) this.vx *= -1;
+          if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+
+      draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(0, 242, 255, 0.6)';
+          ctx.fill();
+      }
+  }
+
+  function initConstellation() {
+      resizeCanvas();
+      particles = [];
+      const particleCount = Math.floor((width * height) / 18000);
+      for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle());
+      }
+  }
+
+  function animateConstellation() {
+      ctx.clearRect(0, 0, width, height);
+
+      for (let i = 0; i < particles.length; i++) {
+          particles[i].update();
+          particles[i].draw();
+
+          for (let j = i + 1; j < particles.length; j++) {
+              const dx = particles[i].x - particles[j].x;
+              const dy = particles[i].y - particles[j].y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+
+              if (dist < 120) {
+                  ctx.beginPath();
+                  ctx.moveTo(particles[i].x, particles[i].y);
+                  ctx.lineTo(particles[j].x, particles[j].y);
+                  ctx.strokeStyle = `rgba(0, 242, 255, ${0.15 * (1 - dist / 120)})`;
+                  ctx.lineWidth = 0.6;
+                  ctx.stroke();
+              }
+          }
+      }
+      requestAnimationFrame(animateConstellation);
+  }
+
+  window.addEventListener('resize', () => {
+      resizeCanvas();
+      initConstellation();
+  });
+
+  initConstellation();
+  animateConstellation();
+
+  // --- 2. AUDIO PLAYER (MP3 real gerado pelo agente) ---
+  const audio = document.getElementById('audio-player');
+  let isPlaying = false;
+  let playbackSpeed = 1.0;
+
+  function formatTime(totalSeconds) {
+      if (!Number.isFinite(totalSeconds)) return '00:00';
+      const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+      const secs = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+      return `${mins}:${secs}`;
+  }
+
+  function formatDurationTag(totalSeconds) {
+      if (!Number.isFinite(totalSeconds)) return '--';
+      const mins = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+      const secs = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+      return `${mins} min ${secs} seg`;
+  }
+
+  function setPlayingUI(playing) {
+      isPlaying = playing;
+      document.getElementById('play-icon').className = playing ? 'fa-solid fa-pause text-sm ml-0' : 'fa-solid fa-play text-sm ml-0.5';
+      document.getElementById('wave-container').classList.toggle('paused', !playing);
+      renderArchive();
+  }
+
+  function togglePlay() {
+      if (!audio.getAttribute('src')) return;
+      if (audio.paused) audio.play(); else audio.pause();
+  }
+
+  function updateProgressBar() {
+      const percent = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+      document.getElementById('progress-bar').style.width = percent + '%';
+      document.getElementById('time-current').innerText = formatTime(audio.currentTime);
+  }
+
+  function seekAudio(event) {
+      if (!audio.duration) return;
+      const rect = document.getElementById('progress-container').getBoundingClientRect();
+      audio.currentTime = ((event.clientX - rect.left) / rect.width) * audio.duration;
+  }
+
+  function skipTime(seconds) {
+      if (!audio.duration) return;
+      audio.currentTime = Math.min(Math.max(audio.currentTime + seconds, 0), audio.duration);
+  }
+
+  function toggleSpeed() {
+      const speeds = [1.0, 1.25, 1.5, 2.0];
+      playbackSpeed = speeds[(speeds.indexOf(playbackSpeed) + 1) % speeds.length];
+      audio.defaultPlaybackRate = playbackSpeed;
+      audio.playbackRate = playbackSpeed;
+      document.getElementById('speed-btn').innerText = (Number.isInteger(playbackSpeed) ? playbackSpeed.toFixed(1) : playbackSpeed) + 'x';
+  }
+
+  audio.addEventListener('play', () => setPlayingUI(true));
+  audio.addEventListener('pause', () => setPlayingUI(false));
+  audio.addEventListener('timeupdate', updateProgressBar);
+  audio.addEventListener('loadedmetadata', () => {
+      document.getElementById('time-total').innerText = formatTime(audio.duration);
+      document.getElementById('player-duration-tag').innerHTML = `<i class="fa-regular fa-clock mr-1"></i>${formatDurationTag(audio.duration)}`;
+      updateProgressBar();
+  });
+
+  function hojeISO() {
+      return new Date().toLocaleDateString('sv-SE');
+  }
+
+  function loadEpisodeInPlayer(ep) {
+      currentEpisodeDate = ep.data;
+      const numero = String(ep.numero).padStart(3, '0');
+      document.getElementById('player-ep-tag').innerText = `EPISÓDIO #${numero} • ${ep.data === hojeISO() ? 'HOJE' : ep.data_formatada}`;
+      document.getElementById('player-title').innerText = ep.titulo;
+      document.getElementById('player-duration-tag').innerHTML = `<i class="fa-regular fa-clock mr-1"></i>${formatDurationTag(ep.duracao_segundos)}`;
+      document.getElementById('time-total').innerText = formatTime(ep.duracao_segundos);
+
+      const downloadLink = document.getElementById('download-link');
+      if (ep.audio) {
+          audio.src = ep.audio;
+          downloadLink.href = ep.audio;
+          downloadLink.setAttribute('download', `sintonia_ia_${ep.data}.mp3`);
+      } else {
+          audio.removeAttribute('src');
+          downloadLink.removeAttribute('href');
+      }
+      updateProgressBar();
+      renderArchive();
+  }
+
+  // --- 3. EPISODE ARCHIVE MANAGEMENT ---
+  function renderArchive() {
+      const container = document.getElementById('archive-list');
+      container.innerHTML = '';
+
+      if (!episodesArchive.length) {
+          container.innerHTML = '<p class="p-5 text-xs text-slate-400">Nenhum episódio gerado ainda.</p>';
+          return;
+      }
+
+      episodesArchive.forEach(ep => {
+          const isCurrent = ep.data === currentEpisodeDate;
+          const dateLabel = ep.data === hojeISO() ? `Hoje • ${ep.data_formatada}` : ep.data_formatada;
+          const item = document.createElement('div');
+          item.className = `p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:bg-slate-900/60 ${isCurrent ? 'bg-cyan-950/20 border-l-2 border-cyan-400' : ''}`;
+
+          item.innerHTML = `
+              <div class="flex items-center gap-4">
+                  <button onclick="playArchiveEpisode('${ep.data}')" aria-label="Tocar episódio de ${ep.data_formatada}" class="w-10 h-10 rounded-full ${isCurrent ? 'bg-cyan-500 text-slate-950' : 'bg-slate-900 text-cyan-400 border border-cyan-500/30'} flex items-center justify-center shrink-0 hover:scale-105 transition-all">
+                      <i class="fa-solid ${isCurrent && isPlaying ? 'fa-pause' : 'fa-play'} text-xs"></i>
+                  </button>
+                  <div>
+                      <div class="flex items-center gap-2 mb-1">
+                          <span class="text-[10px] font-bold text-cyan-400 uppercase">#${String(ep.numero).padStart(3, '0')} • ${dateLabel}</span>
+                          <span class="text-[10px] text-slate-500">• ${formatTime(ep.duracao_segundos)}</span>
+                      </div>
+                      <h4 class="font-bold text-sm text-slate-100">${escapeHtml(ep.titulo)}</h4>
+                  </div>
+              </div>
+              <div class="flex items-center gap-3 self-end sm:self-center">
+                  <button onclick="playArchiveEpisode('${ep.data}')" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
+                      <i class="fa-solid fa-podcast"></i> Carregar no Player
+                  </button>
+                  ${ep.audio ? `<a href="${ep.audio}" download="sintonia_ia_${ep.data}.mp3" class="text-slate-400 hover:text-emerald-400 text-xs p-1" title="Baixar Áudio MP3">
+                      <i class="fa-solid fa-download"></i>
+                  </a>` : ''}
+              </div>
+          `;
+          container.appendChild(item);
+      });
+  }
+
+  function playArchiveEpisode(data) {
+      const selected = episodesArchive.find(e => e.data === data);
+      if (!selected) return;
+
+      if (data === currentEpisodeDate) {
+          togglePlay();
+      } else {
+          loadEpisodeInPlayer(selected);
+          if (selected.audio) audio.play();
+      }
+      window.scrollTo({ top: document.getElementById('player').offsetTop - 100, behavior: 'smooth' });
+  }
+
+  function filterArchive() {
+      const query = document.getElementById('archive-search').value.toLowerCase();
+      const items = document.getElementById('archive-list').children;
+      
+      Array.from(items).forEach(item => {
+          const text = item.innerText.toLowerCase();
+          item.style.display = text.includes(query) ? 'flex' : 'none';
+      });
+  }
+
+  // --- 4. FEED MANAGER LOGIC ---
+  function renderFeedList() {
+      const container = document.getElementById('feed-list-container');
+      container.innerHTML = '';
+
+      activeFeeds.forEach(feed => {
+          const item = document.createElement('div');
+          item.className = "bg-slate-900/80 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-3";
+          item.innerHTML = `
+              <div class="flex items-center gap-3 min-w-0">
+                  <button onclick="toggleFeed(${feed.id})" class="w-8 h-8 rounded-lg ${feed.active ? 'bg-cyan-950 text-cyan-400 border border-cyan-500/40' : 'bg-slate-950 text-slate-600 border border-slate-800'} flex items-center justify-center shrink-0">
+                      <i class="fa-solid ${feed.active ? 'fa-check' : 'fa-power-off'} text-xs"></i>
+                  </button>
+                  <div class="min-w-0">
+                      <h5 class="text-xs font-bold text-slate-200 truncate">${feed.name}</h5>
+                      <p class="text-[10px] text-slate-500 truncate">${feed.url}</p>
+                  </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded ${feed.status === 'OK' ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-500/30' : 'bg-rose-950/60 text-rose-400'}">${feed.status}</span>
+                  <button onclick="removeFeed(${feed.id})" class="text-slate-500 hover:text-rose-400 text-xs p-1">
+                      <i class="fa-solid fa-trash"></i>
+                  </button>
+              </div>
+          `;
+          container.appendChild(item);
+      });
+
+      const activeCount = activeFeeds.filter(f => f.active).length;
+      document.getElementById('feed-count-tag').innerText = `${activeCount} de ${activeFeeds.length} Feeds Ativos`;
+  }
+
+  function toggleFeed(id) {
+      const feed = activeFeeds.find(f => f.id === id);
+      if (feed) feed.active = !feed.active;
+      renderFeedList();
+  }
+
+  function removeFeed(id) {
+      activeFeeds = activeFeeds.filter(f => f.id !== id);
+      renderFeedList();
+  }
+
+  function addCustomFeed() {
+      const name = document.getElementById('new-feed-name').value.trim();
+      const url = document.getElementById('new-feed-url').value.trim();
+
+      if (!name || !url) {
+          showToast("Preencha o nome e a URL do feed RSS.", 'warning');
+          return;
+      }
+
+      activeFeeds.push({
+          id: Date.now(),
+          name: name,
+          url: url,
+          active: true,
+          status: "OK"
+      });
+
+      document.getElementById('new-feed-name').value = '';
+      document.getElementById('new-feed-url').value = '';
+      renderFeedList();
+  }
+
+  function testAllFeeds() {
+      activeFeeds.forEach(f => f.status = "Testando...");
+      renderFeedList();
+      setTimeout(() => {
+          activeFeeds.forEach(f => f.status = "OK");
+          renderFeedList();
+      }, 1000);
+  }
+
+  // --- 5. PROMPT CUSTOMIZATION LOGIC ---
+  function savePromptSettings() {
+      closeModal('prompt-modal');
+      showToast("Demonstração: no projeto, as personas são definidas no prompt do agente.");
+  }
+
+  // --- 6. AGENT LIVE LOG MONITOR ---
+  function clearLogs() {
+      document.getElementById('terminal-logs').innerHTML = '<p class="text-cyan-400">🚀 Console limpo.</p>';
+  }
+
+  function startAgentSimulation() {
+      const logs = document.getElementById('terminal-logs');
+      const bar = document.modalProgressBar = document.getElementById('modal-progress-bar');
+      const status = document.getElementById('modal-status-text');
+      const percent = document.getElementById('modal-percent-text');
+      const startBtn = document.getElementById('modal-start-btn');
+
+      startBtn.disabled = true;
+      startBtn.classList.add('opacity-50');
+
+      const steps = [
+          { id: 'step-1', p: 20, txt: "1/5 Coletando Feeds RSS...", log: "Conectando a 5 feeds... Coletados 12 artigos brutos." },
+          { id: 'step-2', p: 40, txt: "2/5 Filtrando e Deduplicando via SQLite...", log: "Consulta noticias_processadas: 7 artigos já processados. 5 notícias inéditas mantidas." },
+          { id: 'step-3', p: 70, txt: "3/5 Gemini gerando roteiro em pt-BR...", log: "Enviando prompt com tom equilibrado. Traduzindo do inglês e criando diálogo Lucas vs Beatriz." },
+          { id: 'step-4', p: 90, txt: "4/5 Sintetizando vozes neurais (edge-tts)...", log: "Sintetizando Lucas (AntonioNeural) e Beatriz (FranciscaNeural)... Concatenando áudios via pydub." },
+          { id: 'step-5', p: 100, txt: "5/5 Concluído! Podcast MP3 salvo com sucesso.", log: "🎉 Execução autônoma finalizada! Episódio publicado na página e enviado ao Telegram." }
+      ];
+
+      let stepIdx = 0;
+      const simInterval = setInterval(() => {
+          if (stepIdx < steps.length) {
+              const current = steps[stepIdx];
+              bar.style.width = current.p + '%';
+              percent.innerText = current.p + '%';
+              status.innerText = current.txt;
+
+              // Update Step UI Badges
+              document.getElementById(current.id).className = "p-1.5 rounded bg-cyan-950 border border-cyan-400 text-cyan-300 font-bold";
+
+              const p = document.createElement('p');
+              p.className = "text-emerald-400";
+              p.innerText = `[${new Date().toLocaleTimeString()}] ${current.log}`;
+              logs.appendChild(p);
+              logs.scrollTop = logs.scrollHeight;
+
+              stepIdx++;
+          } else {
+              clearInterval(simInterval);
+              startBtn.disabled = false;
+              startBtn.classList.remove('opacity-50');
+          }
+      }, 1200);
+  }
+
+  // --- 7. TABS & MODALS UTILS ---
+  function switchTab(tab) {
+      const newsBtn = document.getElementById('tab-btn-news');
+      const scriptBtn = document.getElementById('tab-btn-script');
+      const newsContent = document.getElementById('tab-content-news');
+      const scriptContent = document.getElementById('tab-content-script');
+
+      if (tab === 'news') {
+          newsBtn.className = "px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-cyan-500 text-slate-950 shadow-[0_0_10px_rgba(0,242,255,0.4)]";
+          scriptBtn.className = "px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all";
+          newsContent.classList.remove('hidden');
+          scriptContent.classList.add('hidden');
+      } else {
+          scriptBtn.className = "px-4 py-2 rounded-lg text-xs font-semibold transition-all bg-cyan-500 text-slate-950 shadow-[0_0_10px_rgba(0,242,255,0.4)]";
+          newsBtn.className = "px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white transition-all";
+          scriptContent.classList.remove('hidden');
+          newsContent.classList.add('hidden');
+      }
+  }
+
+  let toastTimer = null;
+  function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const icon = toast.querySelector('i');
+      icon.className = type === 'warning'
+          ? 'fa-solid fa-triangle-exclamation text-amber-400'
+          : 'fa-solid fa-circle-check text-emerald-400';
+      document.getElementById('toast-text').innerText = message;
+      toast.classList.remove('toast-hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.add('toast-hidden'), 3000);
+  }
+
+  async function copyScript() {
+      const falas = Array.from(document.querySelectorAll('#script-container > div'))
+          .map(div => `${div.querySelector('span').innerText.split(' (')[0]}: ${div.querySelector('p').innerText}`);
+      if (!falas.length) return;
+
+      try {
+          await navigator.clipboard.writeText(falas.join('\n\n'));
+          showToast('Roteiro copiado para a área de transferência.');
+      } catch {
+          showToast('Não foi possível copiar o roteiro neste navegador.', 'warning');
+      }
+  }
+
+  function openModal(id) {
+      document.getElementById(id).classList.remove('hidden');
+      if (id === 'feeds-modal') renderFeedList();
+  }
+
+  function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+  }
+
+  // --- 8. DADOS REAIS DO PROJETO (gerados por agent_noticias/frontend_export.py) ---
+  const SOURCE_COLORS = {
+      'OpenAI': 'cyan',
+      'DeepMind': 'emerald',
+      'Hugging Face': 'amber',
+      'TechCrunch': 'rose',
+      'arXiv': 'violet'
+  };
+
+  function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text ?? '';
+      return div.innerHTML;
+  }
+
+  function sourceColor(fonte) {
+      const key = Object.keys(SOURCE_COLORS).find(k => (fonte || '').includes(k));
+      return key ? SOURCE_COLORS[key] : 'cyan';
+  }
+
+  function formatNewsDate(isoDate) {
+      const date = isoDate ? new Date(isoDate) : null;
+      if (!date || Number.isNaN(date.getTime())) return '';
+      const hora = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      const dia = date.toLocaleDateString('sv-SE');
+      const ontem = new Date(Date.now() - 86400000).toLocaleDateString('sv-SE');
+      if (dia === hojeISO()) return `Hoje • ${hora}`;
+      if (dia === ontem) return `Ontem • ${hora}`;
+      return `${date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • ${hora}`;
+  }
+
+  function renderNews(noticias) {
+      const container = document.getElementById('tab-content-news');
+      document.getElementById('news-count').innerText = noticias.length;
+
+      if (!noticias.length) {
+          container.innerHTML = '<p class="text-xs text-slate-400">Nenhuma notícia neste episódio.</p>';
+          return;
+      }
+
+      container.innerHTML = noticias.map(n => {
+          const cor = sourceColor(n.fonte);
+          return `
+          <div class="glass-card rounded-2xl p-5 border border-slate-800 hover:border-cyan-500/50 transition-all flex flex-col justify-between">
+              <div>
+                  <div class="flex items-center justify-between mb-3">
+                      <span class="text-[10px] font-bold text-${cor}-400 bg-${cor}-950/60 border border-${cor}-500/30 px-2 py-0.5 rounded">${escapeHtml(n.fonte)}</span>
+                      <span class="text-[10px] text-slate-400">${formatNewsDate(n.data_publicacao)}</span>
+                  </div>
+                  <a href="${escapeHtml(n.link)}" target="_blank" rel="noopener">
+                      <h3 class="font-bold text-sm text-slate-100 mb-2 hover:text-${cor}-300 cursor-pointer" title="Original: ${escapeHtml(n.titulo_original || n.titulo)}">${escapeHtml(n.titulo)}</h3>
+                  </a>
+                  <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed">${escapeHtml(n.resumo)}</p>
+              </div>
+              <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                  <span class="text-emerald-400 text-[11px]"><i class="fa-solid fa-check text-[9px] mr-1"></i>Processada</span>
+                  <a href="${escapeHtml(n.link)}" target="_blank" rel="noopener" class="text-slate-400 hover:text-cyan-400 text-[11px]">
+                      Ver fonte <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-0.5"></i>
+                  </a>
+              </div>
+          </div>`;
+      }).join('');
+  }
+
+  function renderScript(falas) {
+      const container = document.getElementById('script-container');
+      document.getElementById('script-line-count').innerText = falas.length;
+
+      if (!falas.length) {
+          container.innerHTML = '<p class="text-xs text-slate-400">Roteiro ainda não disponível.</p>';
+          return;
+      }
+
+      container.innerHTML = falas.map(f => {
+          const isLucas = f.apresentador === 'Lucas';
+          const cor = isLucas ? 'cyan' : 'emerald';
+          const papel = isLucas ? 'Lucas (Analista)' : 'Beatriz (Questionadora)';
+          return `
+          <div class="flex gap-3 items-start">
+              <div class="w-8 h-8 rounded-full bg-${cor}-950 border border-${cor}-400 flex items-center justify-center text-${cor}-300 text-xs shrink-0 font-bold mt-1">${f.apresentador[0]}</div>
+              <div class="flex-1 bg-slate-900/90 border border-${cor}-500/20 p-3.5 rounded-2xl rounded-tl-none">
+                  <div class="flex items-center justify-between mb-1">
+                      <span class="font-bold text-${cor}-400 text-xs">${papel}</span>
+                      <span class="text-[10px] text-slate-500">${escapeHtml(f.voz)}</span>
+                  </div>
+                  <p class="text-slate-200">${escapeHtml(f.fala)}</p>
+              </div>
+          </div>`;
+      }).join('');
+  }
+
+  async function carregarJSON(caminho) {
+      const resposta = await fetch(caminho, { cache: 'no-store' });
+      if (!resposta.ok) throw new Error(`HTTP ${resposta.status} ao ler ${caminho}`);
+      return resposta.json();
+  }
+
+  async function carregarDadosDoProjeto() {
+      try {
+          const [episodio, acervo] = await Promise.all([
+              carregarJSON('data/episodio.json'),
+              carregarJSON('data/episodios.json').catch(() => [])
+          ]);
+
+          episodesArchive = acervo.length ? acervo : [episodio];
+          activeFeeds = (episodio.feeds || []).map((f, i) => ({ id: i + 1, name: f.nome, url: f.url, active: true, status: 'OK' }));
+          document.querySelectorAll('.modelo-gemini').forEach(el => el.innerText = episodio.modelo_nome || 'Gemini');
+
+          loadEpisodeInPlayer(episodio);
+          document.getElementById('content-subtitle').innerText =
+              `Episódio #${String(episodio.numero).padStart(3, '0')} • ${episodio.data_formatada} • notícias selecionadas e roteiro escrito pelo agente`;
+          renderNews(episodio.noticias || []);
+          renderScript(episodio.roteiro || []);
+          renderFeedList();
+      } catch (erro) {
+          console.error('Falha ao carregar dados do agente:', erro);
+          document.getElementById('player-title').innerText = 'Nenhum episódio disponível ainda.';
+          renderArchive();
+          renderNews([]);
+          renderScript([]);
+      }
+  }
+
+  carregarDadosDoProjeto();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
