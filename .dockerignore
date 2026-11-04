@@ -7,3 +7,6 @@ dados/
 frontend/
 *.mp3
 *.bat
+tests/
+.github/
+requirements-dev.txt

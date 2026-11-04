@@ -18,10 +18,10 @@ PODCAST_PATH = PROJECT_ROOT / "podcast_ia_hoje.mp3"
 
 async def executar_pipeline_agente():
     print("🚀 === INICIANDO AGENTE AUTÔNOMO DE PODCAST DE IA ===")
-    
+
     # 1. Coleta
     noticias_brutas = extrair_noticias(limite_por_feed=5)
-    
+
     # 2. Deduplicação
     noticias_ineditas = filtrar_noticias_inéditas(noticias_brutas)
     if not noticias_ineditas:
@@ -30,14 +30,14 @@ async def executar_pipeline_agente():
 
     # 3. Roteirização com Gemini (em pt-BR)
     roteiro = gerar_roteiro_podcast(noticias_ineditas)
-    
+
     DADOS_DIR.mkdir(parents=True, exist_ok=True)
     roteiro_path = DADOS_DIR / "roteiro_hoje.txt"
     roteiro_path.write_text(roteiro, encoding="utf-8")
-        
+
     # 4. Geração do Áudio Final
     await processar_roteiro_para_audio(roteiro, str(PODCAST_PATH))
-    
+
     # 5. Registra notícias como processadas no DB
     registrar_noticias_processadas(noticias_ineditas)
 
@@ -66,7 +66,7 @@ async def executar_pipeline_agente():
             print(f"⚠️ Não foi possível enviar ao Telegram: {exc}")
     else:
         print("Telegram não configurado (TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID no .env); envio pulado.")
-    
+
     print("✅ Pipeline autônomo concluído!")
 
 if __name__ == "__main__":

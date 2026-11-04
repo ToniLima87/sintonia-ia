@@ -120,7 +120,7 @@ def gerar_roteiro_podcast(noticias: List[NoticiasBrutas]) -> str:
         bloco_noticias += f"Fonte: {n.fonte}\nTítulo: {n.titulo}\nResumo: {n.resumo}\nLink: {n.link}\n\n"
 
     print("Gemini está traduzindo, filtrando e criando o roteiro fluido em Português do Brasil...")
-    
+
     response = client.models.generate_content(
         model=MODELO_GEMINI,
         contents=PROMPT_ROTEIRISTA_PTBR.format(conteudo_noticias=bloco_noticias),
@@ -128,7 +128,7 @@ def gerar_roteiro_podcast(noticias: List[NoticiasBrutas]) -> str:
             temperature=0.7,
         ),
     )
-    
+
     try:
         roteiro = response.text
     except ValueError as exc:
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         roteiro_ptbr = gerar_roteiro_podcast(noticias)
         print("\n=== ROTEIRO GERADO EM PORTUGUÊS DO BRASIL ===\n")
         print(roteiro_ptbr)
-        
+
         # Salva o roteiro para inspeção
         output_dir = PROJECT_ROOT / "dados"
         output_dir.mkdir(parents=True, exist_ok=True)

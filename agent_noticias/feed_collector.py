@@ -21,24 +21,24 @@ class NoticiasBrutas(BaseModel):
 
 def extrair_noticias(limite_por_feed: int = 5) -> List[NoticiasBrutas]:
     noticias_coletadas: List[NoticiasBrutas] = []
-    
+
     for feed_info in FEEDS_CONFIG:
         print(f"Lendo feed: {feed_info['fonte']}...")
         parsed_feed = feedparser.parse(feed_info["url"])
-        
+
         # Trata falhas de parse ou feeds fora do ar
         if parsed_feed.bozo and not parsed_feed.entries:
             print(f"Erro ao acessar ou ler {feed_info['fonte']}")
             continue
         for entry in parsed_feed.entries[:limite_por_feed]:
-            # Normalização básica de campos 
+            # Normalização básica de campos
             data_pub = entry.get("published_parsed") or entry.get("updated_parsed")
             if data_pub:
                 data_pub = datetime(*data_pub[:6], tzinfo=timezone.utc)
             else:
                 data_pub = datetime.now(timezone.utc)
             resumo_texto = entry.get("summary", entry.get("description", ""))
-            
+
             noticia = NoticiasBrutas(
                 titulo=entry.get("title", "Sem título"),
                 link=entry.get("link", ""),
@@ -47,7 +47,7 @@ def extrair_noticias(limite_por_feed: int = 5) -> List[NoticiasBrutas]:
                 fonte=feed_info["fonte"]
             )
             noticias_coletadas.append(noticia)
-            
+
     print(f"\nTotal de notícias coletadas: {len(noticias_coletadas)}")
     return noticias_coletadas
 

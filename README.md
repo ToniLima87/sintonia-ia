@@ -1,5 +1,9 @@
 # 🎙️ Sintonia IA — Agente Autônomo de Podcast de Notícias de IA
 
+[![CI](https://github.com/ToniLima87/sintonia-ia/actions/workflows/ci.yml/badge.svg)](https://github.com/ToniLima87/sintonia-ia/actions/workflows/ci.yml)
+[![CD](https://github.com/ToniLima87/sintonia-ia/actions/workflows/cd.yml/badge.svg)](https://github.com/ToniLima87/sintonia-ia/actions/workflows/cd.yml)
+![Python](https://img.shields.io/badge/python-3.13-blue)
+
 Agente em Python que, todos os dias, **coleta notícias de Inteligência Artificial**, escreve com o **Gemini** um bate-papo em português do Brasil entre dois apresentadores, **transforma o roteiro em áudio** com vozes neurais, **envia o episódio para o Telegram** e **publica tudo numa landing page** com player e acervo de episódios.
 
 Tudo roda sem intervenção humana: um agendador dispara o pipeline às 07:00 e o episódio chega no celular.
@@ -85,8 +89,12 @@ Agent_Noticias/
 ├── main.py                       # Orquestrador do pipeline
 ├── agendador.py                  # Agendador diário usado no Docker
 ├── ver_banco.py                  # Mostra o histórico do banco no terminal
+├── tests/                        # Testes automatizados (pytest)
+├── .github/workflows/            # Pipelines de CI e CD
 ├── Dockerfile
 ├── docker-compose.yml
+├── pyproject.toml                # Configuração do ruff e do pytest
+├── requirements-dev.txt          # Dependências de desenvolvimento
 ├── rodar_agente.bat              # Executado pelo Agendador de Tarefas do Windows
 ├── servir_frontend.bat           # Abre a landing page localmente
 ├── requirements.txt
@@ -163,14 +171,43 @@ O `docker-compose.yml` sobe dois serviços:
 - **`agente`**: roda o `agendador.py`, que executa o pipeline todos os dias às 07:00 (fuso `America/Sao_Paulo`). As pastas `dados/` e `frontend/` ficam em volumes, então o histórico sobrevive à recriação do container.
 - **`landing-page`**: nginx servindo a landing page em [http://localhost:8080](http://localhost:8080).
 
-```bash
-docker compose up -d --build                      # sobe tudo
-docker compose logs -f agente                     # acompanha o agente
-docker compose run --rm agente python main.py     # gera um episódio agora
-docker compose down                               # desliga tudo
-```
+Rode **um comando por vez**, conforme o que você quer fazer:
+
+| Objetivo | Comando |
+|---|---|
+| Subir agente + landing page | `docker compose up -d --build` |
+| Acompanhar o agente (`Ctrl+C` para sair) | `docker compose logs -f agente` |
+| Gerar um episódio agora | `docker compose run --rm agente python main.py` |
+| Desligar tudo (o agendamento diário para) | `docker compose down` |
 
 > Use **um** agendador por vez: o container ou a tarefa do Windows. Com os dois ativos, o episódio é enviado duas vezes.
+
+> **Windows + WSL:** suba os containers pelo **PowerShell** (caminho `C:\...`), não pelo terminal WSL (`/mnt/c/...`). Quando o Docker Desktop reinicia os containers ao ligar o PC, pastas montadas a partir de `/mnt/c` podem aparecer vazias: a landing page responde `403 Forbidden` e o agente perde o acesso ao histórico. O Docker Desktop precisa estar aberto antes de qualquer comando `docker`.
+
+---
+
+## ✅ Testes e CI/CD
+
+Os testes cobrem coleta, deduplicação, roteiro, tradução, síntese de voz, Telegram, landing page e agendador. Rodam sem internet e sem chaves: feeds, Gemini, edge-tts e Telegram são substituídos por versões falsas.
+
+```bash
+python -m pip install -r requirements-dev.txt
+ruff check .        # lint
+pytest -v           # testes
+```
+
+Pipelines no GitHub Actions (`.github/workflows/`):
+
+| Workflow | Quando roda | O que faz |
+|---|---|---|
+| **CI** (`ci.yml`) | Todo push na `main` e todo pull request | Lint com ruff, testes com pytest, build da imagem Docker e validação do `docker-compose.yml` |
+| **CD** (`cd.yml`) | Quando o CI passa na `main` | Publica a imagem em `ghcr.io/tonilima87/sintonia-ia` com as tags `latest` e o hash do commit |
+
+Para rodar a imagem publicada em qualquer servidor com Docker:
+
+```bash
+docker pull ghcr.io/tonilima87/sintonia-ia:latest
+```
 
 ---
 

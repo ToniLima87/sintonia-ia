@@ -29,13 +29,13 @@ def filtrar_noticias_inéditas(noticias: List[NoticiasBrutas]) -> List[NoticiasB
     inicializar_banco()
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    
+
     noticias_novas = []
     for noticia in noticias:
         cursor.execute("SELECT 1 FROM noticias_processadas WHERE link = ?", (noticia.link,))
         if not cursor.fetchone():
             noticias_novas.append(noticia)
-            
+
     conn.close()
     print(f"🧹 Filtragem de duplicadas: {len(noticias_novas)} de {len(noticias)} são inéditas.")
     return noticias_novas

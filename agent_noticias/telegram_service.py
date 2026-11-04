@@ -1,4 +1,5 @@
 import html
+import json
 import os
 import re
 import sys
@@ -13,6 +14,8 @@ from .deduplication_service import listar_ultimo_lote
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PODCAST_PATH = PROJECT_ROOT / "podcast_ia_hoje.mp3"
+FRONTEND_DIR = PROJECT_ROOT / "frontend"
+EPISODIO_FRONTEND_PATH = FRONTEND_DIR / "data" / "episodio.json"
 LIMITE_MENSAGEM = 4000
 
 load_dotenv(PROJECT_ROOT / ".env")
@@ -148,6 +151,14 @@ def mostrar_chats_recentes() -> None:
 
 
 def reenviar_ultimo_episodio() -> None:
+    # O acervo da landing page guarda o MP3 de cada dia; podcast_ia_hoje.mp3 não é atualizado
+    # quando o episódio é gerado dentro do Docker.
+    if EPISODIO_FRONTEND_PATH.exists():
+        episodio = json.loads(EPISODIO_FRONTEND_PATH.read_text(encoding="utf-8"))
+        if episodio.get("audio"):
+            audio = FRONTEND_DIR / episodio["audio"].split("?")[0]
+            enviar_episodio(audio, episodio.get("noticias", []))
+            return
     enviar_episodio(PODCAST_PATH, listar_ultimo_lote())
 
 
