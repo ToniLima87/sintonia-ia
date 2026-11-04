@@ -94,7 +94,6 @@ Agent_Noticias/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── pyproject.toml                # Configuração do ruff e do pytest
-├── requirements-dev.txt          # Dependências de desenvolvimento
 ├── rodar_agente.bat              # Executado pelo Agendador de Tarefas do Windows
 ├── servir_frontend.bat           # Abre a landing page localmente
 ├── requirements.txt
@@ -191,7 +190,7 @@ Rode **um comando por vez**, conforme o que você quer fazer:
 Os testes cobrem coleta, deduplicação, roteiro, tradução, síntese de voz, Telegram, landing page e agendador. Rodam sem internet e sem chaves: feeds, Gemini, edge-tts e Telegram são substituídos por versões falsas.
 
 ```bash
-python -m pip install -r requirements-dev.txt
+python -m pip install pytest ruff   # ferramentas de desenvolvimento
 ruff check .        # lint
 pytest -v           # testes
 ```

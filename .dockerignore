@@ -9,4 +9,3 @@ frontend/
 *.bat
 tests/
 .github/
-requirements-dev.txt
